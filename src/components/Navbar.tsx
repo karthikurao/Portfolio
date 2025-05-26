@@ -1,15 +1,21 @@
 'use client'
 
-import Link from 'next/link'
+import NextLink from 'next/link' // Import NextLink to alias it
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { motion } from 'framer-motion'
-import AnimatedText from './AnimatedText' // For the main logo "Karthik U Rao"
-import AnimatedNavLinkText from './AnimatedNavLinkText'; // For individual nav link text
-import KRLogo from './Logo'; // For the "KR" initial logo
-import { useEffect, useState, useRef } from 'react'
+import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
+import AnimatedText from './AnimatedText'
+import AnimatedNavLinkText from './AnimatedNavLinkText';
+import KRLogo from './Logo'; // Assuming your KRLogo component is named Logo.tsx
+import { useEffect, useState, useRef, FC, MouseEventHandler } from 'react'
 
-const navLinks = [
+interface NavLinkItem {
+  name: string;
+  href: string;
+  sectionId: string;
+}
+
+const navLinks: NavLinkItem[] = [
   { name: 'Home', href: '/', sectionId: 'home' },
   { name: 'About', href: '/about', sectionId: 'about' },
   { name: 'Projects', href: '/projects', sectionId: 'projects' },
@@ -18,6 +24,73 @@ const navLinks = [
   { name: 'Contact', href: '/contact', sectionId: 'contact' },
 ];
 
+interface TiltableNavLinkProps {
+  link: NavLinkItem;
+  isActive: boolean;
+  pathname: string;
+  onClick: () => void;
+}
+
+const TiltableNavLink: FC<TiltableNavLinkProps> = ({ link, isActive, pathname, onClick }) => {
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const [isLinkHovered, setIsLinkHovered] = useState(false);
+
+  const springConfig = { stiffness: 200, damping: 25, mass: 1 };
+  const springX = useSpring(mouseX, springConfig);
+  const springY = useSpring(mouseY, springConfig);
+
+  const rotateX = useTransform(springY, [-0.5, 0.5], ["5deg", "-5deg"]);
+  const rotateY = useTransform(springX, [-0.5, 0.5], ["-5deg", "5deg"]);
+
+  const handleMouseMove: MouseEventHandler<HTMLAnchorElement> = (event) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+    mouseX.set((event.clientX - rect.left) / width - 0.5);
+    mouseY.set((event.clientY - rect.top) / height - 0.5);
+  };
+
+  const handleMouseLeave = () => {
+    mouseX.set(0);
+    mouseY.set(0);
+  };
+
+  // CORRECTED: Use motion(Component) for NextLink
+  const MotionLink = motion(NextLink);
+
+  return (
+    <MotionLink
+      href={pathname === '/' && link.sectionId !== 'resume-page' ? `/#${link.sectionId}` : link.href}
+      onClick={onClick}
+      className={cn(
+        'text-sm font-medium relative px-3 py-2 rounded-full group transition-colors duration-200 block',
+      )}
+      aria-current={isActive ? "page" : undefined}
+      style={{ 
+        rotateX, 
+        rotateY, 
+        transformPerspective: '800px',
+      }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      onHoverStart={() => setIsLinkHovered(true)} 
+      onHoverEnd={() => setIsLinkHovered(false)}   
+      key={link.name} // key prop is good here as MotionLink is the direct element in map
+    >
+      <AnimatedNavLinkText text={link.name} isActive={isActive} isHovered={isLinkHovered} />
+      {isActive && (
+        <motion.div
+          className="absolute inset-0 bg-purple-600 rounded-full -z-10" 
+          layoutId="activeNavLinkPill" 
+          transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+        />
+      )}
+    </MotionLink>
+  );
+};
+
+// Main Navbar Component
 export default function Navbar() {
   const pathname = usePathname();
   const [activeSection, setActiveSection] = useState<string | null>('home');
@@ -64,7 +137,7 @@ export default function Navbar() {
         let highestVisibilityPercentage = 0;
         const viewportHeight = window.innerHeight;
 
-        navLinks.forEach(link => { // Iterate through navLinks to check corresponding sections
+        navLinks.forEach(link => {
           if (link.sectionId) {
             const element = document.getElementById(link.sectionId);
             if (element) {
@@ -119,7 +192,7 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-lg border-b border-slate-700">
       <div className="container mx-auto flex items-center justify-between px-4 py-2">
-        <Link 
+        <NextLink 
           href={pathname === '/' ? '/#home' : '/'}
           onClick={() => {
             if (pathname === '/') {
@@ -134,7 +207,7 @@ export default function Navbar() {
             text="Karthik U Rao" 
             className="text-xl font-bold text-white group-hover:text-purple-400 transition-colors duration-300 ml-2" 
           />
-        </Link>
+        </NextLink>
 
         <div className="hidden md:flex items-center gap-1">
           {navLinks.map((link) => {
@@ -147,28 +220,17 @@ export default function Navbar() {
             }
 
             return (
-              <Link
-                href={pathname === '/' ? `/#${link.sectionId}` : link.href}
-                key={link.name}
+              <TiltableNavLink
+                key={link.name} 
+                link={link}
+                isActive={isActive}
+                pathname={pathname}
                 onClick={() => {
                   if (pathname === '/') {
                     setActiveSection(link.sectionId);
                   }
                 }}
-                className={cn(
-                  'text-sm font-medium relative px-3 py-2 rounded-full group transition-colors duration-200',
-                )}
-                aria-current={isActive ? "page" : undefined}
-              >
-                <AnimatedNavLinkText text={link.name} isActive={isActive} />
-                {isActive && (
-                  <motion.div
-                    className="absolute inset-0 bg-purple-600 rounded-full -z-10" 
-                    layoutId="activeNavLinkPill" 
-                    transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-                  />
-                )}
-              </Link>
+              />
             )
           })}
         </div>

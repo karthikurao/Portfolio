@@ -7,19 +7,11 @@ import { cn } from '@/lib/utils';
 interface AnimatedNavLinkTextProps {
   text: string;
   isActive: boolean;
+  isHovered: boolean;
 }
 
-const AnimatedNavLinkText: React.FC<AnimatedNavLinkTextProps> = ({ text, isActive }) => {
+const AnimatedNavLinkText: React.FC<AnimatedNavLinkTextProps> = ({ text, isActive, isHovered }) => {
   const letters = Array.from(text);
-
-  const containerVariants = {
-    initial: {},
-    hover: {
-      transition: {
-        staggerChildren: 0.03, // Slight delay between each letter's animation
-      },
-    },
-  };
 
   const letterVariants = {
     initial: {
@@ -27,38 +19,38 @@ const AnimatedNavLinkText: React.FC<AnimatedNavLinkTextProps> = ({ text, isActiv
       opacity: 1,
       rotateX: 0,
     },
-    hover: {
-      y: -4,       // Move letter up slightly
-      opacity: 0.7,  // Fade it a bit
-      rotateX: 20,   // Give it a slight 3D tilt
-      transition: {
-        duration: 0.2,
-        ease: "easeOut",
-      },
+    hover: { 
+      y: -4,       
+      opacity: 0.7,  
+      rotateX: 15, // Slightly reduced rotation for a quicker feel   
     },
   };
 
   const textColorClass = isActive 
     ? "text-white" // Text color when link is active (pill background is purple)
-    : "text-slate-300 group-hover:text-white"; // Default and hover color when not active
+    : isHovered 
+      ? "text-white" // Text color when hovered (and not active)
+      : "text-slate-300"; // Default text color
 
   return (
-    <motion.div
-      className={cn("flex pointer-events-none", textColorClass)} // pointer-events-none so hover is on parent Link
-      variants={containerVariants}
-      initial="initial"
-      // `whileHover` will be controlled by the parent <Link> which will have the "group" class
-    >
+    <div className={cn("flex items-center justify-center", textColorClass, "transition-colors duration-100 ease-in-out")}> {/* Faster color transition */}
       {letters.map((letter, index) => (
         <motion.span
           key={`${letter}-${index}`}
           variants={letterVariants}
-          className="inline-block" // Ensures transforms work correctly
+          animate={isHovered && !isActive ? "hover" : "initial"} 
+          transition={{ // This transition applies to changes triggered by `animate`
+            type: "spring", 
+            stiffness: 400, // A bit stiffer for a quicker response
+            damping: 15,    // Controls bounciness
+            delay: index * 0.025, // Slightly faster stagger
+          }} 
+          className="inline-block" 
         >
-          {letter === " " ? "\u00A0" : letter} {/* Handle spaces correctly */}
+          {letter === " " ? "\u00A0" : letter} 
         </motion.span>
       ))}
-    </motion.div>
+    </div>
   );
 };
 

@@ -1,7 +1,10 @@
 // src/components/ProjectsSection.tsx
 'use client'
 
-import { motion } from 'framer-motion'
+// Updated imports for 3D tilt effect
+import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
+import React from 'react'; // Import React for React.MouseEventHandler
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -13,8 +16,8 @@ const projectData = [
     title: 'CareCrew: Volunteer Social Network',
     description: 'Android app to connect volunteers by skill and location. Integrated Firebase Auth, Real-time DB, and Push Notifications.',
     tags: ['Java', 'Firebase', 'Android', 'Google Maps API'],
-    githubUrl: 'https://github.com/karthikurao/CareCrew', // Replace with your actual URL
-    liveDemoUrl: '#', // Replace with your actual URL
+    githubUrl: 'https://github.com/karthikurao/CareCrew', 
+    liveDemoUrl: '#', 
   },
   {
     title: 'Deepfake Detection System',
@@ -39,6 +42,52 @@ const projectData = [
   },
 ]
 
+// Internal Component for the 3D Tiltable Card
+const TiltableCard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  const springConfig = { stiffness: 150, damping: 20, mass: 1 };
+  const springX = useSpring(mouseX, springConfig);
+  const springY = useSpring(mouseY, springConfig);
+
+  const rotateX = useTransform(springY, [-0.5, 0.5], ["7deg", "-7deg"]); // Max 7 deg rotation
+  const rotateY = useTransform(springX, [-0.5, 0.5], ["-7deg", "7deg"]); // Max 7 deg rotation
+
+  const handleMouseMove: React.MouseEventHandler<HTMLDivElement> = (event) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+    const mouseXRelative = event.clientX - rect.left;
+    const mouseYRelative = event.clientY - rect.top;
+
+    mouseX.set((mouseXRelative / width) - 0.5);
+    mouseY.set((mouseYRelative / height) - 0.5);
+  };
+
+  const handleMouseLeave = () => {
+    mouseX.set(0);
+    mouseY.set(0);
+  };
+
+  return (
+    <motion.div
+      style={{
+        transformStyle: "preserve-3d",
+        transformPerspective: "1000px",
+        rotateX,
+        rotateY,
+      }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      className="h-full" 
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+// Variants for the overall container of projects
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -47,9 +96,10 @@ const containerVariants = {
   },
 }
 
+// Variants for the initial appearance of each card
 const itemVariants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: { y: 0, opacity: 1, transition: { duration: 0.5 } },
+  hidden: { y: 20, opacity: 0, scale: 0.95 },
+  visible: { y: 0, opacity: 1, scale: 1, transition: { duration: 0.5, ease: "easeOut" } },
 }
 
 export default function ProjectsSection() {
@@ -71,38 +121,45 @@ export default function ProjectsSection() {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.1 }}
-          className="grid md:grid-cols-2 gap-8"
+          className="grid md:grid-cols-2 gap-8" // Consider adding perspective here if needed: [perspective:1200px]
         >
           {projectData.map((project) => (
-            <motion.div key={project.title} variants={itemVariants} whileHover={{ y: -8, scale: 1.02 }}>
-              <Card className="bg-slate-900 border-slate-700 h-full flex flex-col">
-                <CardHeader>
-                  <CardTitle className="text-xl font-bold text-cyan-300">{project.title}</CardTitle>
-                </CardHeader>
-                <CardContent className="flex-grow flex flex-col">
-                  <p className="text-slate-400 mb-4 flex-grow">{project.description}</p>
-                  <div className="mb-4 flex flex-wrap gap-2">
-                    {project.tags.map((tag) => (
-                      <Badge key={tag} variant="secondary" className="bg-slate-700 text-slate-300 hover:bg-slate-600">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                  <div className="mt-auto flex gap-4">
-                    <Link href={project.githubUrl} target="_blank" passHref>
-                      <Button variant="outline" className="text-white border-white hover:bg-white hover:text-slate-900 w-full">
-                        <Github className="mr-2 h-4 w-4" /> GitHub
-                      </Button>
-                    </Link>
-                    <Link href={project.liveDemoUrl} target="_blank" passHref>
-                      <Button variant="default" className="bg-indigo-600 hover:bg-indigo-700 w-full">
-                        <ExternalLink className="mr-2 h-4 w-4" /> Live Demo
-                      </Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
+            // Wrap the existing card structure with TiltableCard
+            // The key is now on TiltableCard
+            <TiltableCard key={project.title}> 
+              {/* This motion.div handles the entry animation, removed old whileHover */}
+              <motion.div variants={itemVariants} className="h-full">
+                {/* Added shadow effect to the Card component */}
+                <Card className="bg-slate-900 border-slate-700 h-full flex flex-col shadow-xl hover:shadow-purple-500/20 transition-shadow duration-300">
+                  <CardHeader>
+                    <CardTitle className="text-xl font-bold text-cyan-300">{project.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="flex-grow flex flex-col">
+                    <p className="text-slate-400 mb-4 flex-grow">{project.description}</p>
+                    <div className="mb-4 flex flex-wrap gap-2">
+                      {project.tags.map((tag) => (
+                        <Badge key={tag} variant="secondary" className="bg-slate-700 text-slate-300 hover:bg-slate-600">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                    <div className="mt-auto flex gap-4">
+                      {/* Links use your existing structure */}
+                      <Link href={project.githubUrl} target="_blank" passHref>
+                        <Button variant="outline" className="text-white border-white hover:bg-white hover:text-slate-900 w-full">
+                          <Github className="mr-2 h-4 w-4" /> GitHub
+                        </Button>
+                      </Link>
+                      <Link href={project.liveDemoUrl} target="_blank" passHref>
+                        <Button variant="default" className="bg-indigo-600 hover:bg-indigo-700 w-full">
+                          <ExternalLink className="mr-2 h-4 w-4" /> Live Demo
+                        </Button>
+                      </Link>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </TiltableCard>
           ))}
         </motion.div>
       </div>
