@@ -24,7 +24,7 @@ export default function Navbar() {
         {/* Animated Name/Logo */}
         <Link href="/">
           <AnimatedText 
-            text="Karthik U Rao" 
+            text="Karthik Rao" 
             className="text-xl font-bold text-white" 
           />
         </Link>

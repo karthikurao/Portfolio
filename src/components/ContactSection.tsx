@@ -10,7 +10,8 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { toast } from "sonner"
-import { Github, Linkedin, Send, Loader2 } from 'lucide-react'
+// Import new icons: Instagram, Twitter
+import { Github, Linkedin, Instagram, Twitter, Send, Loader2 } from 'lucide-react'
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -23,15 +24,21 @@ export default function ContactSection() {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: '', email: '', message: '' },
+    defaultValues: {
+      name: '',
+      email: '',
+      message: '',
+    },
   })
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true)
     try {
-      const response = await fetch('https://formspree.io/f/your_form_id', { // Replace with your Formspree URL
+      const response = await fetch('https://formspree.io/f/mpwdgonl', { // Replace with your Formspree URL
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(values),
       })
 
@@ -91,7 +98,7 @@ export default function ContactSection() {
                 {...form.register('name')}
                 className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-purple-500"
                 placeholder="Your Name"
-                suppressHydrationWarning={true} /* FIX: Add this prop */
+                suppressHydrationWarning={true}
               />
               {form.formState.errors.name && <p className="text-red-400 text-sm pt-1">{form.formState.errors.name.message}</p>}
             </div>
@@ -103,7 +110,7 @@ export default function ContactSection() {
                 {...form.register('email')}
                 className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-purple-500"
                 placeholder="your.email@example.com"
-                suppressHydrationWarning={true} /* FIX: Add this prop */
+                suppressHydrationWarning={true}
               />
               {form.formState.errors.email && <p className="text-red-400 text-sm pt-1">{form.formState.errors.email.message}</p>}
             </div>
@@ -115,7 +122,7 @@ export default function ContactSection() {
                 {...form.register('message')}
                 className="bg-slate-800 border-slate-700 text-white min-h-[150px] placeholder:text-slate-500 focus:border-purple-500"
                 placeholder="Your message here..."
-                suppressHydrationWarning={true} /* FIX: Add this prop */
+                suppressHydrationWarning={true}
             />
             {form.formState.errors.message && <p className="text-red-400 text-sm pt-1">{form.formState.errors.message.message}</p>}
           </div>
@@ -135,6 +142,7 @@ export default function ContactSection() {
           </div>
         </motion.form>
 
+        {/* Updated Social Media Links Section */}
         <div className="mt-16 flex justify-center gap-8">
             <motion.a
                 href="https://www.linkedin.com/in/karthik-u-rao"
@@ -143,18 +151,44 @@ export default function ContactSection() {
                 className="text-slate-400 hover:text-purple-400 transition-colors"
                 whileHover={{ scale: 1.2 }}
                 whileTap={{ scale: 0.9 }}
+                aria-label="LinkedIn Profile"
             >
                 <Linkedin size={32} />
             </motion.a>
             <motion.a
-                href="https://github.com/" // Replace with your GitHub URL
+                href="https://github.com/karthikurao" // Replace with your GitHub username URL
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-slate-400 hover:text-purple-400 transition-colors"
                 whileHover={{ scale: 1.2 }}
                 whileTap={{ scale: 0.9 }}
+                aria-label="GitHub Profile"
             >
                 <Github size={32} />
+            </motion.a>
+            {/* NEW: Instagram Link */}
+            <motion.a
+                href="https://instagram.com/karthikrao._" // Replace with your Instagram URL
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-slate-400 hover:text-purple-400 transition-colors"
+                whileHover={{ scale: 1.2 }}
+                whileTap={{ scale: 0.9 }}
+                aria-label="Instagram Profile"
+            >
+                <Instagram size={32} />
+            </motion.a>
+            {/* NEW: Twitter (X) Link */}
+            <motion.a
+                href="https://x.com/igotkarthik" // Replace with your Twitter URL
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-slate-400 hover:text-purple-400 transition-colors"
+                whileHover={{ scale: 1.2 }}
+                whileTap={{ scale: 0.9 }}
+                aria-label="Twitter Profile"
+            >
+                <Twitter size={32} />
             </motion.a>
         </div>
       </div>

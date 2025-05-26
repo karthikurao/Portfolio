@@ -1,14 +1,16 @@
+// src/app/layout.tsx
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import './globals.css' // <-- Crucial: Imports all your styles
+import './globals.css'
 import { cn } from '@/lib/utils'
 import Navbar from '@/components/Navbar'
 import { Toaster } from "@/components/ui/sonner"
+import Footer from '@/components/Footer' // <-- IMPORT THE NEW FOOTER
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Karthik U Rao | Portfolio',
+  title: 'Karthik Rao | Portfolio',
   description: 'Full-Stack Developer & AI Enthusiast',
 }
 
@@ -20,9 +22,14 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={cn(inter.className, 'bg-slate-900 text-white')}>
-        <Navbar />
-        {children} {/* This is where your page content renders */}
-        <Toaster richColors position="top-right" />
+        <div className="flex flex-col min-h-screen">
+          <Navbar />
+          <main className="flex-grow">
+            {children}
+          </main>
+          <Toaster richColors position="top-right" />
+          <Footer /> {/* <-- ADD THE FOOTER HERE */}
+        </div>
       </body>
     </html>
   )

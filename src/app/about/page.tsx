@@ -1,9 +1,12 @@
-// src/app/about/page.tsx
+import AboutSection from '@/components/AboutSection';
 
-// This component is the entry point for the "/about" route.
-// It imports the main AboutSection component and renders it.
-import AboutSection from '@/components/AboutSection'
-
+// This is the component for the dedicated "/about" route.
+// It simply imports and displays our existing AboutSection component.
 export default function AboutPage() {
-    return <AboutSection />;
+  return (
+    // We add some padding-top to give space below the sticky navbar
+    <div className="pt-16">
+      <AboutSection />
+    </div>
+  );
 }

@@ -3,47 +3,58 @@
 
 import { motion } from 'framer-motion'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Briefcase, GraduationCap, Mic, Palette, BrainCircuit } from 'lucide-react'
+import {
+  GraduationCap,
+  BrainCircuit,
+  Lightbulb,
+  Users,
+  BrainCog,
+  RefreshCw,
+  Mic,
+  Presentation,
+  HeartHandshake
+} from 'lucide-react'
 
+// Correctly defined data for Education
 const education = [
   {
     degree: 'Master of Computer Application',
     institution: 'Dayananda Sagar College Of Engineering',
-    year: 'Expected Aug 2025',
+    year: 'Expected Sep 2025',
   },
   {
     degree: 'Bachelor of Computer Application',
     institution: 'DVS College of Arts, Science and Commerce',
-    year: 'Jun 2023',
+    year: 'Sep 2023',
   },
 ]
 
+// NEW: Data array for all your soft skills with icons
+const softSkills = [
+  { name: 'Problem Solving', icon: <Lightbulb className="h-5 w-5 text-yellow-400" /> },
+  { name: 'Critical Thinking', icon: <BrainCog className="h-5 w-5 text-sky-400" /> },
+  { name: 'Adaptability', icon: <RefreshCw className="h-5 w-5 text-green-400" /> },
+  { name: 'Teamwork', icon: <Users className="h-5 w-5 text-orange-400" /> },
+]
+
+// Corrected data for artistic skills with better icons
 const artisticSkills = [
-    { name: 'Singing', icon: <Mic className="h-6 w-6 text-indigo-400" /> },
-    { name: 'Anchoring', icon: <Briefcase className="h-6 w-6 text-purple-400" /> },
-    { name: 'Public Speaking', icon: <Palette className="h-6 w-6 text-cyan-400" /> },
+    { name: 'Singing', icon: <Mic className="h-5 w-5 text-pink-400" /> },
+    { name: 'Anchoring', icon: <Presentation className="h-5 w-5 text-indigo-400" /> },
+    { name: 'Public Speaking', icon: <HeartHandshake className="h-5 w-5 text-red-400" /> },
 ]
 
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.2,
-      delayChildren: 0.3,
-    },
+    transition: { staggerChildren: 0.2, delayChildren: 0.3 },
   },
 }
 
 const itemVariants = {
   hidden: { y: 20, opacity: 0 },
-  visible: {
-    y: 0,
-    opacity: 1,
-    transition: {
-      duration: 0.5,
-    },
-  },
+  visible: { y: 0, opacity: 1, transition: { duration: 0.5 } },
 }
 
 export default function AboutSection() {
@@ -61,7 +72,7 @@ export default function AboutSection() {
             About Me
           </motion.h2>
           <motion.p variants={itemVariants} className="text-lg text-slate-300 max-w-3xl mx-auto">
-            I am a full-stack developer with a passion for artificial intelligence, dedicated to building robust and user-centric applications. Eager to leverage my technical and collaborative strengths in a dynamic engineering team.
+            A full-stack developer with a passion for artificial intelligence, dedicated to building robust and user-centric applications.
           </motion.p>
         </motion.div>
 
@@ -72,6 +83,7 @@ export default function AboutSection() {
           variants={containerVariants}
           className="grid md:grid-cols-2 gap-10"
         >
+          {/* Education Card (No changes here) */}
           <motion.div variants={itemVariants}>
             <Card className="bg-slate-800 border-slate-700 h-full">
               <CardHeader>
@@ -91,22 +103,38 @@ export default function AboutSection() {
             </Card>
           </motion.div>
 
+          {/* UPDATED Skills Card */}
           <motion.div variants={itemVariants}>
             <Card className="bg-slate-800 border-slate-700 h-full">
               <CardHeader>
                 <CardTitle className="flex items-center gap-3 text-2xl text-purple-300">
-                  <BrainCircuit className="h-8 w-8" /> Artistic & Soft Skills
+                  <BrainCircuit className="h-8 w-8" /> Personal Skills
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="mb-4 text-slate-300">Beyond the code, I bring strong problem-solving, teamwork, and communication skills to the table.</p>
-                <div className="flex flex-wrap gap-4">
-                    {artisticSkills.map((skill) => (
-                        <div key={skill.name} className="flex items-center gap-2 p-2 bg-slate-700 rounded-lg">
+              <CardContent className="space-y-6">
+                {/* Soft Skills Section */}
+                <div>
+                  <h4 className="font-semibold text-lg mb-3 text-slate-200">Soft Skills</h4>
+                  <div className="flex flex-wrap gap-3">
+                    {softSkills.map((skill) => (
+                        <div key={skill.name} className="flex items-center gap-2 p-2 px-3 bg-slate-700 rounded-full text-sm">
                            {skill.icon}
                            <span className="font-medium text-slate-200">{skill.name}</span>
                         </div>
                     ))}
+                  </div>
+                </div>
+                {/* Artistic Skills Section */}
+                <div>
+                  <h4 className="font-semibold text-lg mb-3 text-slate-200">Artistic Skills</h4>
+                   <div className="flex flex-wrap gap-3">
+                    {artisticSkills.map((skill) => (
+                        <div key={skill.name} className="flex items-center gap-2 p-2 px-3 bg-slate-700 rounded-full text-sm">
+                           {skill.icon}
+                           <span className="font-medium text-slate-200">{skill.name}</span>
+                        </div>
+                    ))}
+                  </div>
                 </div>
               </CardContent>
             </Card>

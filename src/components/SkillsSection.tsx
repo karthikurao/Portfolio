@@ -8,19 +8,15 @@ import { SiFirebase, SiTensorflow, SiOpencv, SiDjango, SiNextdotjs, SiTailwindcs
 
 const skills = [
   { name: 'Java', icon: <FaJava className="h-12 w-12 text-orange-500" /> },
-  { name: 'Python', icon: <FaPython className="h-12 w-12 text-blue-400" /> },
   { name: 'JavaScript', icon: <FaJsSquare className="h-12 w-12 text-yellow-400" /> },
   { name: 'PHP', icon: <FaPhp className="h-12 w-12 text-indigo-400" /> },
   { name: 'HTML5', icon: <FaHtml5 className="h-12 w-12 text-red-500" /> },
   { name: 'CSS3', icon: <FaCss3Alt className="h-12 w-12 text-blue-500" /> },
   { name: 'SQL', icon: <FaDatabase className="h-12 w-12 text-sky-400" /> },
-  { name: 'Next.js', icon: <SiNextdotjs className="h-12 w-12" /> },
-  { name: 'React', icon: <FaReact className="h-12 w-12 text-cyan-400" /> },
   { name: 'Django', icon: <SiDjango className="h-12 w-12 text-green-800" /> },
   { name: 'Firebase', icon: <SiFirebase className="h-12 w-12 text-yellow-500" /> },
   { name: 'TensorFlow', icon: <SiTensorflow className="h-12 w-12 text-orange-400" /> },
   { name: 'OpenCV', icon: <SiOpencv className="h-12 w-12 text-blue-600" /> },
-  { name: 'Tailwind CSS', icon: <SiTailwindcss className="h-12 w-12 text-cyan-500" /> },
 ]
 
 const containerVariants = {

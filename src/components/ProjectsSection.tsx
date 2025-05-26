@@ -13,28 +13,28 @@ const projectData = [
     title: 'CareCrew: Volunteer Social Network',
     description: 'Android app to connect volunteers by skill and location. Integrated Firebase Auth, Real-time DB, and Push Notifications.',
     tags: ['Java', 'Firebase', 'Android', 'Google Maps API'],
-    githubUrl: '#', // Replace with your actual URL
+    githubUrl: 'https://github.com/karthikurao/CareCrew', // Replace with your actual URL
     liveDemoUrl: '#', // Replace with your actual URL
   },
   {
     title: 'Deepfake Detection System',
     description: 'A ResNeXt CNN+LSTM pipeline for video-based fake detection, achieving 85% accuracy. Web interface built with Django.',
     tags: ['Python', 'TensorFlow', 'LSTM', 'Django', 'OpenCV'],
-    githubUrl: '#',
+    githubUrl: 'https://github.com/karthikurao/Deepfake-Detection',
     liveDemoUrl: '#',
   },
   {
     title: 'Moodify: Emotion-Based Music',
     description: 'AI-driven mobile app using TensorFlow & OpenCV for facial emotion detection to recommend Spotify playlists.',
     tags: ['React Native', 'TensorFlow', 'OpenCV', 'Spotify API'],
-    githubUrl: '#',
+    githubUrl: 'https://github.com/karthikurao/Moodify',
     liveDemoUrl: '#',
   },
   {
     title: 'E-commerce Web Application',
     description: 'Scalable full-stack platform with user authentication, payment gateway, and an admin dashboard for non-beverage products.',
     tags: ['PHP', 'JavaScript', 'MySQL', 'HTML/CSS', 'RESTful APIs'],
-    githubUrl: '#',
+    githubUrl: 'https://github.com/karthikurao/Green-Tea-Website',
     liveDemoUrl: '#',
   },
 ]
