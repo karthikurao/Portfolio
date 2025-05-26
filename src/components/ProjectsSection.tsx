@@ -1,15 +1,14 @@
 // src/components/ProjectsSection.tsx
 'use client'
 
-// Updated imports for 3D tilt effect
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
-import React from 'react'; // Import React for React.MouseEventHandler
-
+import React from 'react'; 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Github, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
+import { useCursor } from '@/context/CursorContext'; // <-- IMPORT useCursor
 
 const projectData = [
   {
@@ -42,7 +41,6 @@ const projectData = [
   },
 ]
 
-// Internal Component for the 3D Tiltable Card
 const TiltableCard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -51,18 +49,13 @@ const TiltableCard: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   const springX = useSpring(mouseX, springConfig);
   const springY = useSpring(mouseY, springConfig);
 
-  const rotateX = useTransform(springY, [-0.5, 0.5], ["7deg", "-7deg"]); // Max 7 deg rotation
-  const rotateY = useTransform(springX, [-0.5, 0.5], ["-7deg", "7deg"]); // Max 7 deg rotation
+  const rotateX = useTransform(springY, [-0.5, 0.5], ["7deg", "-7deg"]); 
+  const rotateY = useTransform(springX, [-0.5, 0.5], ["-7deg", "7deg"]); 
 
   const handleMouseMove: React.MouseEventHandler<HTMLDivElement> = (event) => {
     const rect = event.currentTarget.getBoundingClientRect();
-    const width = rect.width;
-    const height = rect.height;
-    const mouseXRelative = event.clientX - rect.left;
-    const mouseYRelative = event.clientY - rect.top;
-
-    mouseX.set((mouseXRelative / width) - 0.5);
-    mouseY.set((mouseYRelative / height) - 0.5);
+    mouseX.set((event.clientX - rect.left) / rect.width - 0.5);
+    mouseY.set((event.clientY - rect.top) / rect.height - 0.5);
   };
 
   const handleMouseLeave = () => {
@@ -87,7 +80,6 @@ const TiltableCard: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   );
 };
 
-// Variants for the overall container of projects
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -96,13 +88,14 @@ const containerVariants = {
   },
 }
 
-// Variants for the initial appearance of each card
 const itemVariants = {
   hidden: { y: 20, opacity: 0, scale: 0.95 },
   visible: { y: 0, opacity: 1, scale: 1, transition: { duration: 0.5, ease: "easeOut" } },
 }
 
 export default function ProjectsSection() {
+  const { setVariant } = useCursor(); // <-- GET setVariant from context
+
   return (
     <section id="projects" className="py-20 px-4 bg-slate-800 text-white">
       <div className="container mx-auto">
@@ -121,15 +114,11 @@ export default function ProjectsSection() {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.1 }}
-          className="grid md:grid-cols-2 gap-8" // Consider adding perspective here if needed: [perspective:1200px]
+          className="grid md:grid-cols-2 gap-8"
         >
           {projectData.map((project) => (
-            // Wrap the existing card structure with TiltableCard
-            // The key is now on TiltableCard
             <TiltableCard key={project.title}> 
-              {/* This motion.div handles the entry animation, removed old whileHover */}
               <motion.div variants={itemVariants} className="h-full">
-                {/* Added shadow effect to the Card component */}
                 <Card className="bg-slate-900 border-slate-700 h-full flex flex-col shadow-xl hover:shadow-purple-500/20 transition-shadow duration-300">
                   <CardHeader>
                     <CardTitle className="text-xl font-bold text-cyan-300">{project.title}</CardTitle>
@@ -144,14 +133,23 @@ export default function ProjectsSection() {
                       ))}
                     </div>
                     <div className="mt-auto flex gap-4">
-                      {/* Links use your existing structure */}
                       <Link href={project.githubUrl} target="_blank" passHref>
-                        <Button variant="outline" className="text-white border-white hover:bg-white hover:text-slate-900 w-full">
+                        <Button 
+                          variant="outline" 
+                          className="text-white border-white hover:bg-white hover:text-slate-900 w-full"
+                          onMouseEnter={() => setVariant('link-hover')} // <-- ADDED
+                          onMouseLeave={() => setVariant('default')}   // <-- ADDED
+                        >
                           <Github className="mr-2 h-4 w-4" /> GitHub
                         </Button>
                       </Link>
                       <Link href={project.liveDemoUrl} target="_blank" passHref>
-                        <Button variant="default" className="bg-indigo-600 hover:bg-indigo-700 w-full">
+                        <Button 
+                          variant="default" 
+                          className="bg-indigo-600 hover:bg-indigo-700 w-full"
+                          onMouseEnter={() => setVariant('link-hover')} // <-- ADDED
+                          onMouseLeave={() => setVariant('default')}   // <-- ADDED
+                        >
                           <ExternalLink className="mr-2 h-4 w-4" /> Live Demo
                         </Button>
                       </Link>

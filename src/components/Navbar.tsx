@@ -1,13 +1,14 @@
 'use client'
 
-import NextLink from 'next/link' // Import NextLink to alias it
+import NextLink from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
 import AnimatedText from './AnimatedText'
 import AnimatedNavLinkText from './AnimatedNavLinkText';
-import KRLogo from './Logo'; // Assuming your KRLogo component is named Logo.tsx
+import KRLogo from './Logo';
 import { useEffect, useState, useRef, FC, MouseEventHandler } from 'react'
+import { useCursor } from '@/context/CursorContext'; // <-- IMPORT useCursor
 
 interface NavLinkItem {
   name: string;
@@ -34,7 +35,8 @@ interface TiltableNavLinkProps {
 const TiltableNavLink: FC<TiltableNavLinkProps> = ({ link, isActive, pathname, onClick }) => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
-  const [isLinkHovered, setIsLinkHovered] = useState(false);
+  const [isLinkHoveredForTextAnim, setIsLinkHoveredForTextAnim] = useState(false); // For text cascade
+  const { setVariant } = useCursor(); // <-- GET setVariant from context
 
   const springConfig = { stiffness: 200, damping: 25, mass: 1 };
   const springX = useSpring(mouseX, springConfig);
@@ -45,18 +47,15 @@ const TiltableNavLink: FC<TiltableNavLinkProps> = ({ link, isActive, pathname, o
 
   const handleMouseMove: MouseEventHandler<HTMLAnchorElement> = (event) => {
     const rect = event.currentTarget.getBoundingClientRect();
-    const width = rect.width;
-    const height = rect.height;
-    mouseX.set((event.clientX - rect.left) / width - 0.5);
-    mouseY.set((event.clientY - rect.top) / height - 0.5);
+    mouseX.set((event.clientX - rect.left) / rect.width - 0.5);
+    mouseY.set((event.clientY - rect.top) / rect.height - 0.5);
   };
 
-  const handleMouseLeave = () => {
+  const handleMouseLeaveForTilt = () => {
     mouseX.set(0);
     mouseY.set(0);
   };
 
-  // CORRECTED: Use motion(Component) for NextLink
   const MotionLink = motion(NextLink);
 
   return (
@@ -73,12 +72,20 @@ const TiltableNavLink: FC<TiltableNavLinkProps> = ({ link, isActive, pathname, o
         transformPerspective: '800px',
       }}
       onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      onHoverStart={() => setIsLinkHovered(true)} 
-      onHoverEnd={() => setIsLinkHovered(false)}   
-      key={link.name} // key prop is good here as MotionLink is the direct element in map
+      onMouseLeave={() => {
+        handleMouseLeaveForTilt();         // Reset tilt
+        setVariant('default');             // Reset cursor variant
+        setIsLinkHoveredForTextAnim(false); // Reset text animation hover state
+      }}
+      onMouseEnter={() => {               // For cursor context & text animation
+        setVariant('link-hover');
+        setIsLinkHoveredForTextAnim(true);
+      }}
+      // onHoverStart and onHoverEnd are Framer Motion's synthetic events, 
+      // using onMouseEnter/Leave for simplicity with context update
+      key={link.name}
     >
-      <AnimatedNavLinkText text={link.name} isActive={isActive} isHovered={isLinkHovered} />
+      <AnimatedNavLinkText text={link.name} isActive={isActive} isHovered={isLinkHoveredForTextAnim} />
       {isActive && (
         <motion.div
           className="absolute inset-0 bg-purple-600 rounded-full -z-10" 
@@ -90,11 +97,12 @@ const TiltableNavLink: FC<TiltableNavLinkProps> = ({ link, isActive, pathname, o
   );
 };
 
-// Main Navbar Component
+// ... (Rest of your Navbar component remains the same)
 export default function Navbar() {
   const pathname = usePathname();
   const [activeSection, setActiveSection] = useState<string | null>('home');
   const [hasMounted, setHasMounted] = useState(false);
+  const { setVariant } = useCursor(); // Get setVariant for logo hover
   const observerRef = useRef<IntersectionObserver | null>(null);
   const observedElementsRef = useRef<HTMLElement[]>([]);
 
@@ -108,6 +116,7 @@ export default function Navbar() {
     observedElementsRef.current = []; 
     
     if (pathname === '/') {
+      // ... (IntersectionObserver and handleScroll logic remains the same) ...
       const observerCallback: IntersectionObserverCallback = (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
@@ -137,9 +146,9 @@ export default function Navbar() {
         let highestVisibilityPercentage = 0;
         const viewportHeight = window.innerHeight;
 
-        navLinks.forEach(link => {
-          if (link.sectionId) {
-            const element = document.getElementById(link.sectionId);
+        navLinks.forEach(itemLink => { // Renamed to avoid conflict with outer 'link'
+          if (itemLink.sectionId) {
+            const element = document.getElementById(itemLink.sectionId);
             if (element) {
               const rect = element.getBoundingClientRect();
               const elTop = rect.top;
@@ -150,7 +159,7 @@ export default function Navbar() {
                 const visiblePart = Math.max(0, Math.min(elBottom, viewportHeight) - Math.max(elTop, 0));
                 const visibilityPercentage = (visiblePart / elHeight) * 100;
 
-                if (link.sectionId === 'home' && window.scrollY < viewportHeight * 0.3) { 
+                if (itemLink.sectionId === 'home' && window.scrollY < viewportHeight * 0.3) { 
                     currentActiveId = 'home';
                     highestVisibilityPercentage = 101; 
                     return; 
@@ -158,11 +167,11 @@ export default function Navbar() {
 
                 if (visibilityPercentage > highestVisibilityPercentage) {
                     highestVisibilityPercentage = visibilityPercentage;
-                    currentActiveId = link.sectionId;
+                    currentActiveId = itemLink.sectionId;
                 } else if (visibilityPercentage === highestVisibilityPercentage) {
                     const currentActiveElement = document.getElementById(currentActiveId!);
                     if (currentActiveElement && element.getBoundingClientRect().top < currentActiveElement.getBoundingClientRect().top) {
-                        currentActiveId = link.sectionId;
+                        currentActiveId = itemLink.sectionId;
                     }
                 }
               }
@@ -201,10 +210,12 @@ export default function Navbar() {
           }}
           className="flex items-center group"
           aria-label="Homepage"
+          onMouseEnter={() => setVariant('link-hover')} // Set cursor variant on logo hover
+          onMouseLeave={() => setVariant('default')}   // Reset on leave
         >
           <KRLogo className="text-white group-hover:text-purple-400 transition-colors duration-300" size={28} />
           <AnimatedText 
-            text="Karthik U Rao" 
+            text="Karthik Rao" 
             className="text-xl font-bold text-white group-hover:text-purple-400 transition-colors duration-300 ml-2" 
           />
         </NextLink>

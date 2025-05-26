@@ -5,35 +5,50 @@
 
 @layer base {
   :root {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 222.2 84% 4.9%; /* Dark Slate background */
+    --foreground: 210 40% 98%; /* Light text */
+
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
+
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 262.1 83.3% 57.8%; 
-    --primary-foreground: 210 20% 98%;
+
+    --primary: 262.1 83.3% 57.8%; /* Purple for primary accent */
+    --primary-foreground: 210 20% 98%; /* Text on Primary - Light */
+    
     --secondary: 215 27.9% 16.9%; 
     --secondary-foreground: 210 20% 98%;
+
     --muted: 215 27.9% 16.9%;
     --muted-foreground: 217.9 10.6% 64.9%;
+
     --accent: 215 27.9% 16.9%;
     --accent-foreground: 210 20% 98%;
+
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 20% 98%;
+
     --border: 215 27.9% 16.9%;
     --input: 215 27.9% 16.9%;
-    --ring: 262.1 83.3% 57.8%; 
+    --ring: 262.1 83.3% 57.8%; /* Ring color often matches primary */
+
     --radius: 0.5rem;
   }
-}
 
-@layer base {
-  * {
-    @apply border-border;
+  /* Hide default cursor sitewide */
+  html {
+    cursor: none;
   }
+  /* Ensure links and buttons also don't show their default cursors */
+  a, button {
+    cursor: none;
+  }
+
   body {
-    @apply bg-background text-foreground;
+    /* @apply bg-background text-foreground; */ /* Remove this line */
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
     scroll-behavior: smooth;
   }
 }
@@ -46,7 +61,7 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background-color: #475569; 
+  background-color: #475569; /* slate-600 */
   border-radius: 4px;
-  border: 2px solid hsl(var(--background)); 
+  border: 2px solid hsl(var(--background)); /* Match body background */
 }

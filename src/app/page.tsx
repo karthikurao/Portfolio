@@ -9,17 +9,17 @@ import SkillsSection from '@/components/SkillsSection'
 import { Button } from '@/components/ui/button'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import { useCursor } from '@/context/CursorContext' // <-- IMPORT useCursor
 
 export default function Home() {
+  const { setVariant } = useCursor(); // <-- GET setVariant
+
   return (
-    // Main container for all page content
     <main className="w-full">
-      {/* Hero Section: Full-screen intro with id="home" */}
       <section 
         id="home" 
         className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-4 text-center overflow-hidden"
       >
-        {/* Animated Name Heading */}
         <motion.h1
           initial={{ opacity: 0, y: -40 }}
           animate={{ opacity: 1, y: 0 }}
@@ -29,7 +29,6 @@ export default function Home() {
           Hi, I’m Karthik Rao
         </motion.h1>
 
-        {/* Animated Subtitle */}
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -39,7 +38,6 @@ export default function Home() {
           Full-stack Developer | AI Enthusiast
         </motion.h2>
 
-        {/* Animated Tagline */}
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -49,7 +47,6 @@ export default function Home() {
           I build intelligent, scalable web & mobile applications that blend performance, design, and user experience.
         </motion.p>
 
-        {/* Animated Call-to-Action Buttons */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -60,6 +57,8 @@ export default function Home() {
             <Button 
                 variant="default" 
                 className="text-white bg-indigo-600 hover:bg-indigo-700 px-6 py-3 text-base rounded-lg transition-transform transform hover:scale-105"
+                onMouseEnter={() => setVariant('link-hover')} // <-- ADDED
+                onMouseLeave={() => setVariant('default')}   // <-- ADDED
             >
               📄 View Resume
             </Button>
@@ -68,6 +67,8 @@ export default function Home() {
             <Button 
                 variant="outline" 
                 className="text-purple-400 border-purple-400 hover:bg-purple-400 hover:text-slate-900 px-6 py-3 text-base rounded-lg transition-transform transform hover:scale-105"
+                onMouseEnter={() => setVariant('link-hover')} // <-- ADDED
+                onMouseLeave={() => setVariant('default')}   // <-- ADDED
             >
               ✉️ Contact Me
             </Button>
@@ -75,19 +76,10 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* About Me Section */}
       <AboutSection />
-
-      {/* Projects Section */}
       <ProjectsSection />
-      
-      {/* Skills Section */}
       <SkillsSection />
-
-      {/* Resume Section */}
       <ResumeSection />
-
-      {/* Contact Section */}
       <ContactSection />
     </main>
   )
