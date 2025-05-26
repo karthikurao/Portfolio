@@ -3,8 +3,8 @@
 
 import { motion } from 'framer-motion'
 import { Card, CardContent } from '@/components/ui/card'
-import { FaJava, FaPhp, FaHtml5, FaCss3Alt, FaJsSquare, FaReact, FaDatabase, FaPython } from 'react-icons/fa'
-import { SiFirebase, SiTensorflow, SiOpencv, SiDjango, SiNextdotjs, SiTailwindcss } from 'react-icons/si'
+import { FaJava, FaPhp, FaHtml5, FaCss3Alt, FaJsSquare, FaDatabase} from 'react-icons/fa'
+import { SiFirebase, SiTensorflow, SiOpencv, SiDjango } from 'react-icons/si'
 
 const skills = [
   { name: 'Java', icon: <FaJava className="h-12 w-12 text-orange-500" /> },

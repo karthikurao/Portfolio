@@ -12,11 +12,14 @@ import Link from 'next/link'
 
 export default function Home() {
   return (
+    // Main container for all page content
     <main className="w-full">
+      {/* Hero Section: Full-screen intro with id="home" */}
       <section 
         id="home" 
         className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-4 text-center overflow-hidden"
       >
+        {/* Animated Name Heading */}
         <motion.h1
           initial={{ opacity: 0, y: -40 }}
           animate={{ opacity: 1, y: 0 }}
@@ -26,6 +29,7 @@ export default function Home() {
           Hi, I’m Karthik Rao
         </motion.h1>
 
+        {/* Animated Subtitle */}
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -35,6 +39,7 @@ export default function Home() {
           Full-stack Developer | AI Enthusiast
         </motion.h2>
 
+        {/* Animated Tagline */}
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -44,6 +49,7 @@ export default function Home() {
           I build intelligent, scalable web & mobile applications that blend performance, design, and user experience.
         </motion.p>
 
+        {/* Animated Call-to-Action Buttons */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -69,10 +75,19 @@ export default function Home() {
         </motion.div>
       </section>
 
+      {/* About Me Section */}
       <AboutSection />
+
+      {/* Projects Section */}
       <ProjectsSection />
+      
+      {/* Skills Section */}
       <SkillsSection />
+
+      {/* Resume Section */}
       <ResumeSection />
+
+      {/* Contact Section */}
       <ContactSection />
     </main>
   )
