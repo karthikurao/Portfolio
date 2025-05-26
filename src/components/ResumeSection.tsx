@@ -12,7 +12,7 @@ import { Download, ChevronsLeft, ChevronsRight } from 'lucide-react';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
-const resumeUrl = '/Karthik_U_Rao_Resume.pdf';
+const resumeUrl = '/resume.pdf';
 
 export default function ResumeSection() {
     const [numPages, setNumPages] = useState<number | null>(null);
@@ -46,7 +46,7 @@ export default function ResumeSection() {
                     className="flex justify-center mb-8"
                 >
                     <a href={resumeUrl} download>
-                        <Button className="bg-indigo-600 hover:bg-indigo-700">
+                        <Button className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 text-base rounded-lg">
                             <Download className="mr-2 h-4 w-4" />
                             Download Resume
                         </Button>
@@ -61,21 +61,35 @@ export default function ResumeSection() {
                     className="flex justify-center"
                 >
                     <Card className="w-full max-w-4xl bg-slate-900 border-slate-700 overflow-hidden">
-                        <CardContent className="p-4">
+                        <CardContent className="p-2 sm:p-4">
                             <div className="relative flex justify-center bg-slate-700">
                                 <Document file={resumeUrl} onLoadSuccess={onDocumentLoadSuccess}>
-                                    <Page pageNumber={pageNumber} renderTextLayer={false} />
+                                    <Page 
+                                        pageNumber={pageNumber} 
+                                        renderTextLayer={false}
+                                        width={800}
+                                    />
                                 </Document>
                             </div>
                              {numPages && (
                                 <div className="flex items-center justify-center gap-4 mt-4 text-white">
-                                    <Button variant="outline" onClick={goToPrevPage} disabled={pageNumber <= 1}>
+                                    <Button 
+                                        variant="outline" 
+                                        onClick={goToPrevPage} 
+                                        disabled={pageNumber <= 1}
+                                        className="border-purple-400 text-purple-400 hover:bg-purple-400 hover:text-slate-900 disabled:opacity-50"
+                                    >
                                         <ChevronsLeft className="h-4 w-4" /> Prev
                                     </Button>
-                                    <span>
+                                    <span className="text-slate-300 font-medium">
                                         Page {pageNumber} of {numPages}
                                     </span>
-                                    <Button variant="outline" onClick={goToNextPage} disabled={pageNumber >= numPages}>
+                                    <Button 
+                                        variant="outline" 
+                                        onClick={goToNextPage} 
+                                        disabled={pageNumber >= numPages}
+                                        className="border-purple-400 text-purple-400 hover:bg-purple-400 hover:text-slate-900 disabled:opacity-50"
+                                    >
                                         Next <ChevronsRight className="h-4 w-4" />
                                     </Button>
                                 </div>
