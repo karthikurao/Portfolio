@@ -4,7 +4,9 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
-import AnimatedText from './AnimatedText'
+import AnimatedText from './AnimatedText' // For the main logo "Karthik U Rao"
+import AnimatedNavLinkText from './AnimatedNavLinkText'; // For individual nav link text
+import KRLogo from './Logo'; // For the "KR" initial logo
 import { useEffect, useState, useRef } from 'react'
 
 const navLinks = [
@@ -12,20 +14,24 @@ const navLinks = [
   { name: 'About', href: '/about', sectionId: 'about' },
   { name: 'Projects', href: '/projects', sectionId: 'projects' },
   { name: 'Skills', href: '/skills', sectionId: 'skills' },
-  { name: 'Resume', href: '/resume', sectionId: 'resume-page' }, 
+  { name: 'Resume', href: '/resume', sectionId: 'resume' }, 
   { name: 'Contact', href: '/contact', sectionId: 'contact' },
 ];
 
 export default function Navbar() {
   const pathname = usePathname();
-  const [activeSection, setActiveSection] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState<string | null>('home');
+  const [hasMounted, setHasMounted] = useState(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
-  // Store DOM elements in a ref for consistent access
   const observedElementsRef = useRef<HTMLElement[]>([]);
 
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   useEffect(() => {
-    // Clear previous elements before observing new ones
+    if (!hasMounted) return;
+
     observedElementsRef.current = []; 
     
     if (pathname === '/') {
@@ -37,115 +43,129 @@ export default function Navbar() {
         });
       };
 
-      // Capture the current value of the ref for use in cleanup
-      // This addresses the exhaustive-deps warning.
       const currentObserver = new IntersectionObserver(observerCallback, {
-        rootMargin: '-50% 0px -50% 0px', 
-        threshold: 0, 
+        rootMargin: '-40% 0px -55% 0px', 
+        threshold: 0.01, 
       });
-      observerRef.current = currentObserver; // Store the observer instance
+      observerRef.current = currentObserver;
 
       navLinks.forEach(link => {
-        if (link.sectionId && link.sectionId !== 'resume-page') {
+        if (link.sectionId) { 
           const element = document.getElementById(link.sectionId);
           if (element) {
-            observedElementsRef.current.push(element); // Store elements for cleanup
+            observedElementsRef.current.push(element);
             currentObserver.observe(element);
           }
         }
       });
       
       const handleScroll = () => {
-        let currentActive: string | null = null;
-        let maxVisibility = 0; 
+        let currentActiveId: string | null = null;
+        let highestVisibilityPercentage = 0;
+        const viewportHeight = window.innerHeight;
 
-        observedElementsRef.current.forEach((el) => {
-            if (el) {
-                const rect = el.getBoundingClientRect();
-                const windowHeight = window.innerHeight || document.documentElement.clientHeight;
-                const visibleHeight = Math.max(0, Math.min(rect.bottom, windowHeight) - Math.max(rect.top, 0));
-                
-                if (visibleHeight > maxVisibility) {
-                    maxVisibility = visibleHeight;
-                    currentActive = el.id;
+        navLinks.forEach(link => { // Iterate through navLinks to check corresponding sections
+          if (link.sectionId) {
+            const element = document.getElementById(link.sectionId);
+            if (element) {
+              const rect = element.getBoundingClientRect();
+              const elTop = rect.top;
+              const elBottom = rect.bottom;
+              const elHeight = rect.height;
+
+              if (elTop < viewportHeight && elBottom > 0) { 
+                const visiblePart = Math.max(0, Math.min(elBottom, viewportHeight) - Math.max(elTop, 0));
+                const visibilityPercentage = (visiblePart / elHeight) * 100;
+
+                if (link.sectionId === 'home' && window.scrollY < viewportHeight * 0.3) { 
+                    currentActiveId = 'home';
+                    highestVisibilityPercentage = 101; 
+                    return; 
                 }
+
+                if (visibilityPercentage > highestVisibilityPercentage) {
+                    highestVisibilityPercentage = visibilityPercentage;
+                    currentActiveId = link.sectionId;
+                } else if (visibilityPercentage === highestVisibilityPercentage) {
+                    const currentActiveElement = document.getElementById(currentActiveId!);
+                    if (currentActiveElement && element.getBoundingClientRect().top < currentActiveElement.getBoundingClientRect().top) {
+                        currentActiveId = link.sectionId;
+                    }
+                }
+              }
             }
+          }
         });
-        
-        const homeElement = document.getElementById('home');
-        if (homeElement) {
-            const homeRect = homeElement.getBoundingClientRect();
-            if (window.scrollY < window.innerHeight / 2 && homeRect.bottom > 0 && homeRect.top < window.innerHeight) {
-                 if (!currentActive || maxVisibility < 100) { 
-                    currentActive = 'home';
-                 }
-            }
-        }
-        setActiveSection(currentActive);
+        setActiveSection(currentActiveId);
       };
       
       window.addEventListener('scroll', handleScroll);
       handleScroll(); 
 
-      // Cleanup function
       return () => {
-        // Use the captured currentObserver value
         if (currentObserver) {
           currentObserver.disconnect();
         }
         window.removeEventListener('scroll', handleScroll);
       };
     } else {
-      setActiveSection(null);
-      // Ensure any existing observer is disconnected when leaving the homepage
+      setActiveSection(null); 
       if (observerRef.current) {
         observerRef.current.disconnect();
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps 
-  }, [pathname]); // Only re-run effect if pathname changes
+  }, [pathname, hasMounted]); 
 
   return (
     <nav className="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-lg border-b border-slate-700">
-      <div className="container mx-auto flex items-center justify-between px-4 py-3">
-        <Link href="/">
+      <div className="container mx-auto flex items-center justify-between px-4 py-2">
+        <Link 
+          href={pathname === '/' ? '/#home' : '/'}
+          onClick={() => {
+            if (pathname === '/') {
+              setActiveSection('home');
+            }
+          }}
+          className="flex items-center group"
+          aria-label="Homepage"
+        >
+          <KRLogo className="text-white group-hover:text-purple-400 transition-colors duration-300" size={28} />
           <AnimatedText 
-            text="Karthik Rao" 
-            className="text-xl font-bold text-white" 
+            text="Karthik U Rao" 
+            className="text-xl font-bold text-white group-hover:text-purple-400 transition-colors duration-300 ml-2" 
           />
         </Link>
-        <div className="hidden md:flex items-center gap-6">
+
+        <div className="hidden md:flex items-center gap-1">
           {navLinks.map((link) => {
             let isActive = false;
             if (pathname === '/') {
               isActive = activeSection === link.sectionId;
-              if (link.sectionId === 'home' && activeSection === null && (typeof window !== 'undefined' && window.scrollY < 100) ) {
-                isActive = true;
-              }
             } else {
-              isActive = pathname === link.href || pathname.startsWith(link.href + '/');
+              isActive = (pathname === link.href || pathname.startsWith(link.href + '/'));
+              if (link.sectionId === 'resume' && pathname === '/resume') isActive = true;
             }
 
             return (
               <Link
-                href={pathname === '/' && link.sectionId !== 'resume-page' ? `/#${link.sectionId}` : link.href}
+                href={pathname === '/' ? `/#${link.sectionId}` : link.href}
                 key={link.name}
                 onClick={() => {
-                  if (pathname === '/' && link.sectionId !== 'resume-page') {
+                  if (pathname === '/') {
                     setActiveSection(link.sectionId);
                   }
                 }}
                 className={cn(
-                  'text-sm font-medium transition-colors relative py-1',
-                  isActive ? 'text-purple-400' : 'text-slate-300 hover:text-white'
+                  'text-sm font-medium relative px-3 py-2 rounded-full group transition-colors duration-200',
                 )}
+                aria-current={isActive ? "page" : undefined}
               >
-                {link.name}
+                <AnimatedNavLinkText text={link.name} isActive={isActive} />
                 {isActive && (
                   <motion.div
-                    className="absolute bottom-[-4px] left-0 right-0 h-[2px] bg-purple-400"
-                    layoutId="activeNavLinkUnderline"
-                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                    className="absolute inset-0 bg-purple-600 rounded-full -z-10" 
+                    layoutId="activeNavLinkPill" 
+                    transition={{ type: 'spring', stiffness: 350, damping: 30 }}
                   />
                 )}
               </Link>
