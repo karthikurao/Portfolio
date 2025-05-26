@@ -1,8 +1,7 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* src/app/globals.css */
+@import "tailwindcss/preflight";
+@import "tailwindcss/utilities";
 
-/* Shadcn/UI Theme Variables */
 @layer base {
   :root {
     --background: 222.2 84% 4.9%;
@@ -28,7 +27,6 @@
   }
 }
 
-/* Base Body Styles */
 @layer base {
   * {
     border-color: hsl(var(--border));
