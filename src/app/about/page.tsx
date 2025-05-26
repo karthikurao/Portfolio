@@ -11,7 +11,10 @@ import ResumeSection from '@/components/ResumeSection'
 
 export default function Home() {
   return (
+    // A single <main> tag now wraps all page content for better structure
     <main className="w-full">
+      {/* Hero Section */}
+      {/* We apply the gradient and screen height to a div inside main */}
       <section id="home" className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-4 text-center">
         <motion.h1
           initial={{ opacity: 0, y: -40 }}
@@ -52,17 +55,19 @@ export default function Home() {
             </Button>
           </Link>
           <Link href="#contact">
-            {/* V V V V V V V PASTE ONE OF THE 3 OPTIONS FROM BELOW HERE V V V V V V V */}
-
-            <Button variant="outline" className="text-purple-400 border-purple-400 hover:bg-purple-400 hover:text-slate-900">
+            {/* FIX APPLIED HERE: 
+              - Changed text to text-cyan-300 for visibility.
+              - Changed border to border-cyan-400.
+              - Updated hover state to match this new color scheme.
+            */}
+            <Button variant="outline" className="text-cyan-300 border-cyan-400 hover:bg-cyan-300 hover:text-slate-900">
               ✉️ Contact Me
             </Button>
-            
-            {/* ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ */}
           </Link>
         </motion.div>
       </section>
 
+      {/* The rest of the sections will now render sequentially after the hero */}
       <AboutSection />
       <ProjectsSection />
       <SkillsSection />
