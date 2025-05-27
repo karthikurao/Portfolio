@@ -12,7 +12,7 @@ import { CursorProvider } from '@/context/CursorContext'; // <-- IMPORT CURSOR P
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Karthik U Rao | Portfolio',
+  title: 'Karthik Rao | Portfolio',
   description: 'Full-Stack Developer & AI Enthusiast',
   icons: {
     icon: '/favicon.svg',

@@ -32,7 +32,7 @@ export default function ContactSection() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true)
     try {
-      const response = await fetch('FORMSPREE_CODE', { // Replace with your Formspree URL
+      const response = await fetch('https://formspree.io/f/mpwdgonl', { // Replace with your Formspree URL
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),

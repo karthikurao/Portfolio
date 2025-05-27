@@ -8,7 +8,7 @@ import AnimatedText from './AnimatedText'
 import AnimatedNavLinkText from './AnimatedNavLinkText';
 import KRLogo from './Logo';
 import { useEffect, useState, useRef, FC, MouseEventHandler } from 'react'
-import { useCursor } from '@/context/CursorContext'; // <-- IMPORT useCursor
+import { useCursor } from '@/context/CursorContext';
 
 interface NavLinkItem {
   name: string;
@@ -35,8 +35,8 @@ interface TiltableNavLinkProps {
 const TiltableNavLink: FC<TiltableNavLinkProps> = ({ link, isActive, pathname, onClick }) => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
-  const [isLinkHoveredForTextAnim, setIsLinkHoveredForTextAnim] = useState(false); // For text cascade
-  const { setVariant } = useCursor(); // <-- GET setVariant from context
+  const [isLinkHoveredForTextAnim, setIsLinkHoveredForTextAnim] = useState(false);
+  const { setVariant } = useCursor();
 
   const springConfig = { stiffness: 200, damping: 25, mass: 1 };
   const springX = useSpring(mouseX, springConfig);
@@ -60,7 +60,7 @@ const TiltableNavLink: FC<TiltableNavLinkProps> = ({ link, isActive, pathname, o
 
   return (
     <MotionLink
-      href={pathname === '/' && link.sectionId !== 'resume-page' ? `/#${link.sectionId}` : link.href}
+      href={pathname === '/' ? `/#${link.sectionId}` : link.href}
       onClick={onClick}
       className={cn(
         'text-sm font-medium relative px-3 py-2 rounded-full group transition-colors duration-200 block',
@@ -73,16 +73,14 @@ const TiltableNavLink: FC<TiltableNavLinkProps> = ({ link, isActive, pathname, o
       }}
       onMouseMove={handleMouseMove}
       onMouseLeave={() => {
-        handleMouseLeaveForTilt();         // Reset tilt
-        setVariant('default');             // Reset cursor variant
-        setIsLinkHoveredForTextAnim(false); // Reset text animation hover state
+        handleMouseLeaveForTilt();         
+        setVariant('default');             
+        setIsLinkHoveredForTextAnim(false); 
       }}
-      onMouseEnter={() => {               // For cursor context & text animation
+      onMouseEnter={() => {               
         setVariant('link-hover');
         setIsLinkHoveredForTextAnim(true);
       }}
-      // onHoverStart and onHoverEnd are Framer Motion's synthetic events, 
-      // using onMouseEnter/Leave for simplicity with context update
       key={link.name}
     >
       <AnimatedNavLinkText text={link.name} isActive={isActive} isHovered={isLinkHoveredForTextAnim} />
@@ -97,14 +95,16 @@ const TiltableNavLink: FC<TiltableNavLinkProps> = ({ link, isActive, pathname, o
   );
 };
 
-// ... (Rest of your Navbar component remains the same)
 export default function Navbar() {
   const pathname = usePathname();
-  const [activeSection, setActiveSection] = useState<string | null>('home');
+  // Initialize activeSection to null. It will be set to 'home' by observer if at top.
+  const [activeSection, setActiveSection] = useState<string | null>(null); 
   const [hasMounted, setHasMounted] = useState(false);
-  const { setVariant } = useCursor(); // Get setVariant for logo hover
+  const { setVariant } = useCursor();
   const observerRef = useRef<IntersectionObserver | null>(null);
-  const observedElementsRef = useRef<HTMLElement[]>([]);
+  // Store elements for the observer, not for general scroll handling here
+  const observedElements = useRef<Map<string, HTMLElement>>(new Map());
+
 
   useEffect(() => {
     setHasMounted(true);
@@ -113,86 +113,92 @@ export default function Navbar() {
   useEffect(() => {
     if (!hasMounted) return;
 
-    observedElementsRef.current = []; 
-    
+    // Clear any previous observers and observed elements
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
+    observedElements.current.clear();
+
     if (pathname === '/') {
-      // ... (IntersectionObserver and handleScroll logic remains the same) ...
       const observerCallback: IntersectionObserverCallback = (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
+            // The last one to become intersecting (often the one most in view or entering view)
+            // will set the active section.
             setActiveSection(entry.target.id);
           }
         });
+        // If after checking all entries, no section is actively intersecting (e.g. scrolled between sections)
+        // and scrollY is very low, default to 'home'. This handles being at the very top.
+        // Otherwise, if nothing is intersecting, activeSection might remain the last one or become null.
+        // For a smoother "sticky" feel, we might only change if a NEW section isIntersecting.
+        // For now, this logic makes the last intersecting section active.
+        const intersectingEntries = entries.filter(e => e.isIntersecting);
+        if (intersectingEntries.length === 0 && window.scrollY < window.innerHeight * 0.3) {
+            setActiveSection('home');
+        } else if (intersectingEntries.length > 0) {
+            // If multiple are intersecting, simple logic takes the last one from the callback.
+            // More sophisticated logic could find the 'most' visible.
+            // For now, entry.target.id from the last intersecting one is fine.
+        }
       };
-
-      const currentObserver = new IntersectionObserver(observerCallback, {
-        rootMargin: '-40% 0px -55% 0px', 
-        threshold: 0.01, 
+      
+      // This rootMargin means the "active zone" for a section is when its
+      // top edge is above the 40% mark of the viewport AND its bottom edge
+      // is below the 45% mark of the viewport from the bottom.
+      // Essentially, a section is active when it's occupying the middle ~15% of the screen,
+      // or more precisely, when it's significantly in view around the center.
+      // Threshold 0.1 means at least 10% of the section needs to be in this zone.
+      const observer = new IntersectionObserver(observerCallback, {
+        rootMargin: '-40% 0px -40% 0px', // Activates when section is more centered
+        threshold: 0.01, // Small threshold, any part in the rootMargin zone
       });
-      observerRef.current = currentObserver;
+      observerRef.current = observer;
 
       navLinks.forEach(link => {
         if (link.sectionId) { 
           const element = document.getElementById(link.sectionId);
           if (element) {
-            observedElementsRef.current.push(element);
-            currentObserver.observe(element);
+            observedElements.current.set(link.sectionId, element);
+            observer.observe(element);
           }
         }
       });
       
-      const handleScroll = () => {
-        let currentActiveId: string | null = null;
-        let highestVisibilityPercentage = 0;
-        const viewportHeight = window.innerHeight;
-
-        navLinks.forEach(itemLink => { // Renamed to avoid conflict with outer 'link'
-          if (itemLink.sectionId) {
-            const element = document.getElementById(itemLink.sectionId);
-            if (element) {
-              const rect = element.getBoundingClientRect();
-              const elTop = rect.top;
-              const elBottom = rect.bottom;
-              const elHeight = rect.height;
-
-              if (elTop < viewportHeight && elBottom > 0) { 
-                const visiblePart = Math.max(0, Math.min(elBottom, viewportHeight) - Math.max(elTop, 0));
-                const visibilityPercentage = (visiblePart / elHeight) * 100;
-
-                if (itemLink.sectionId === 'home' && window.scrollY < viewportHeight * 0.3) { 
-                    currentActiveId = 'home';
-                    highestVisibilityPercentage = 101; 
-                    return; 
-                }
-
-                if (visibilityPercentage > highestVisibilityPercentage) {
-                    highestVisibilityPercentage = visibilityPercentage;
-                    currentActiveId = itemLink.sectionId;
-                } else if (visibilityPercentage === highestVisibilityPercentage) {
-                    const currentActiveElement = document.getElementById(currentActiveId!);
-                    if (currentActiveElement && element.getBoundingClientRect().top < currentActiveElement.getBoundingClientRect().top) {
-                        currentActiveId = itemLink.sectionId;
-                    }
-                }
+      // Initial check to set active section on load for homepage
+      if (window.scrollY < window.innerHeight * 0.3) {
+          setActiveSection('home');
+      } else {
+          // Manually trigger a check for other sections if not at top
+          // This is a bit of a hack; ideally observer handles this.
+          // We can rely on the observer to set the initial active section.
+          // Let's remove complex manual scroll for now and rely on observer.
+          let foundActive = false;
+          navLinks.forEach(link => {
+              if(link.sectionId) {
+                  const el = document.getElementById(link.sectionId);
+                  if (el) {
+                      const rect = el.getBoundingClientRect();
+                      if (rect.top < window.innerHeight * 0.6 && rect.bottom > window.innerHeight * 0.4) {
+                          setActiveSection(link.sectionId);
+                          foundActive = true;
+                      }
+                  }
               }
-            }
-          }
-        });
-        setActiveSection(currentActiveId);
-      };
-      
-      window.addEventListener('scroll', handleScroll);
-      handleScroll(); 
+          });
+          if(!foundActive && window.scrollY > window.innerHeight * 0.3) setActiveSection(null); // Default if nothing found mid-page
+      }
+
 
       return () => {
-        if (currentObserver) {
-          currentObserver.disconnect();
+        if (observerRef.current) {
+          observerRef.current.disconnect();
         }
-        window.removeEventListener('scroll', handleScroll);
       };
     } else {
+      // If not on homepage, clear scroll-based activeSection
       setActiveSection(null); 
-      if (observerRef.current) {
+      if (observerRef.current) { // Ensure cleanup if observer was set
         observerRef.current.disconnect();
       }
     }
@@ -210,12 +216,12 @@ export default function Navbar() {
           }}
           className="flex items-center group"
           aria-label="Homepage"
-          onMouseEnter={() => setVariant('link-hover')} // Set cursor variant on logo hover
-          onMouseLeave={() => setVariant('default')}   // Reset on leave
+          onMouseEnter={() => setVariant('link-hover')} 
+          onMouseLeave={() => setVariant('default')}   
         >
           <KRLogo className="text-white group-hover:text-purple-400 transition-colors duration-300" size={28} />
           <AnimatedText 
-            text="Karthik Rao" 
+            text="Karthik U Rao" 
             className="text-xl font-bold text-white group-hover:text-purple-400 transition-colors duration-300 ml-2" 
           />
         </NextLink>
@@ -224,9 +230,13 @@ export default function Navbar() {
           {navLinks.map((link) => {
             let isActive = false;
             if (pathname === '/') {
-              isActive = activeSection === link.sectionId;
+                // Prioritize 'home' if activeSection is null (usually on initial load at top)
+                // or if explicitly set to 'home'.
+                isActive = (activeSection === null && link.sectionId === 'home' && hasMounted && (typeof window !== 'undefined' && window.scrollY < 50)) 
+                           || activeSection === link.sectionId;
             } else {
               isActive = (pathname === link.href || pathname.startsWith(link.href + '/'));
+              // Special case for resume page to ensure its tab highlights correctly
               if (link.sectionId === 'resume' && pathname === '/resume') isActive = true;
             }
 
