@@ -81,7 +81,6 @@ const TiltableNavLink: FC<TiltableNavLinkProps> = ({ link, isActive, pathname, o
         setVariant('link-hover');
         setIsLinkHoveredForTextAnim(true);
       }}
-      key={link.name}
     >
       <AnimatedNavLinkText text={link.name} isActive={isActive} isHovered={isLinkHoveredForTextAnim} />
       {isActive && (
@@ -97,112 +96,102 @@ const TiltableNavLink: FC<TiltableNavLinkProps> = ({ link, isActive, pathname, o
 
 export default function Navbar() {
   const pathname = usePathname();
-  // Initialize activeSection to null. It will be set to 'home' by observer if at top.
   const [activeSection, setActiveSection] = useState<string | null>(null); 
   const [hasMounted, setHasMounted] = useState(false);
   const { setVariant } = useCursor();
   const observerRef = useRef<IntersectionObserver | null>(null);
-  // Store elements for the observer, not for general scroll handling here
   const observedElements = useRef<Map<string, HTMLElement>>(new Map());
-
 
   useEffect(() => {
     setHasMounted(true);
-  }, []);
+    if (pathname === '/') {
+        if (typeof window !== 'undefined' && window.scrollY < window.innerHeight * 0.3) {
+            setActiveSection('home');
+        } else {
+            let currentVisibleSection: string | null = 'home'; 
+            let maxVisibleRatio = 0;
+            navLinks.forEach(link => {
+                if (link.sectionId) {
+                    const el = document.getElementById(link.sectionId);
+                    if (el) {
+                        const rect = el.getBoundingClientRect();
+                        const vh = window.innerHeight;
+                        if (rect.top < vh && rect.bottom > 0) { 
+                           const visibleHeight = Math.max(0, Math.min(rect.bottom, vh) - Math.max(rect.top, 0));
+                           const ratio = visibleHeight / rect.height;
+                           if (ratio > maxVisibleRatio) {
+                               maxVisibleRatio = ratio;
+                               currentVisibleSection = link.sectionId;
+                           }
+                        }
+                    }
+                }
+            });
+            setActiveSection(currentVisibleSection);
+        }
+    }
+  }, [pathname]); 
 
   useEffect(() => {
-    if (!hasMounted) return;
-
-    // Clear any previous observers and observed elements
-    if (observerRef.current) {
-      observerRef.current.disconnect();
-    }
-    observedElements.current.clear();
-
-    if (pathname === '/') {
-      const observerCallback: IntersectionObserverCallback = (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            // The last one to become intersecting (often the one most in view or entering view)
-            // will set the active section.
-            setActiveSection(entry.target.id);
-          }
-        });
-        // If after checking all entries, no section is actively intersecting (e.g. scrolled between sections)
-        // and scrollY is very low, default to 'home'. This handles being at the very top.
-        // Otherwise, if nothing is intersecting, activeSection might remain the last one or become null.
-        // For a smoother "sticky" feel, we might only change if a NEW section isIntersecting.
-        // For now, this logic makes the last intersecting section active.
-        const intersectingEntries = entries.filter(e => e.isIntersecting);
-        if (intersectingEntries.length === 0 && window.scrollY < window.innerHeight * 0.3) {
-            setActiveSection('home');
-        } else if (intersectingEntries.length > 0) {
-            // If multiple are intersecting, simple logic takes the last one from the callback.
-            // More sophisticated logic could find the 'most' visible.
-            // For now, entry.target.id from the last intersecting one is fine.
-        }
-      };
-      
-      // This rootMargin means the "active zone" for a section is when its
-      // top edge is above the 40% mark of the viewport AND its bottom edge
-      // is below the 45% mark of the viewport from the bottom.
-      // Essentially, a section is active when it's occupying the middle ~15% of the screen,
-      // or more precisely, when it's significantly in view around the center.
-      // Threshold 0.1 means at least 10% of the section needs to be in this zone.
-      const observer = new IntersectionObserver(observerCallback, {
-        rootMargin: '-40% 0px -40% 0px', // Activates when section is more centered
-        threshold: 0.01, // Small threshold, any part in the rootMargin zone
-      });
-      observerRef.current = observer;
-
-      navLinks.forEach(link => {
-        if (link.sectionId) { 
-          const element = document.getElementById(link.sectionId);
-          if (element) {
-            observedElements.current.set(link.sectionId, element);
-            observer.observe(element);
-          }
-        }
-      });
-      
-      // Initial check to set active section on load for homepage
-      if (window.scrollY < window.innerHeight * 0.3) {
-          setActiveSection('home');
-      } else {
-          // Manually trigger a check for other sections if not at top
-          // This is a bit of a hack; ideally observer handles this.
-          // We can rely on the observer to set the initial active section.
-          // Let's remove complex manual scroll for now and rely on observer.
-          let foundActive = false;
-          navLinks.forEach(link => {
-              if(link.sectionId) {
-                  const el = document.getElementById(link.sectionId);
-                  if (el) {
-                      const rect = el.getBoundingClientRect();
-                      if (rect.top < window.innerHeight * 0.6 && rect.bottom > window.innerHeight * 0.4) {
-                          setActiveSection(link.sectionId);
-                          foundActive = true;
-                      }
-                  }
-              }
-          });
-          if(!foundActive && window.scrollY > window.innerHeight * 0.3) setActiveSection(null); // Default if nothing found mid-page
-      }
-
-
-      return () => {
-        if (observerRef.current) {
-          observerRef.current.disconnect();
-        }
-      };
-    } else {
-      // If not on homepage, clear scroll-based activeSection
-      setActiveSection(null); 
-      if (observerRef.current) { // Ensure cleanup if observer was set
+    if (!hasMounted || pathname !== '/') {
+      if (observerRef.current) {
         observerRef.current.disconnect();
       }
+      if (pathname !== '/') setActiveSection(null); 
+      return;
     }
-  }, [pathname, hasMounted]); 
+
+    const observerCallback = (entries: IntersectionObserverEntry[]) => {
+      let newActiveCandidate: string | null = null;
+      let maxRatio = 0;
+
+      entries.forEach(entry => {
+        if (entry.isIntersecting && entry.intersectionRatio > maxRatio) {
+          maxRatio = entry.intersectionRatio;
+          newActiveCandidate = entry.target.id;
+        }
+      });
+
+      let finalActiveSection = null;
+      if (newActiveCandidate && maxRatio > 0.05) { // Require at least 5% visibility via observer
+        finalActiveSection = newActiveCandidate;
+      } else if (typeof window !== 'undefined' && window.scrollY < window.innerHeight * 0.3) {
+        finalActiveSection = 'home';
+      }
+      
+      // Only update if the active section has actually changed
+      if (finalActiveSection !== activeSection) {
+          setActiveSection(finalActiveSection);
+      }
+    };
+
+    observerRef.current = new IntersectionObserver(observerCallback, {
+      rootMargin: '-25% 0px -25% 0px', 
+      threshold: Array.from(Array(11).keys()).map(i => i / 10), 
+    });
+
+    const currentObserver = observerRef.current;
+    observedElements.current.clear(); 
+
+    navLinks.forEach(link => {
+      if (link.sectionId) { 
+        const element = document.getElementById(link.sectionId);
+        if (element) {
+          observedElements.current.set(link.sectionId, element);
+          currentObserver.observe(element);
+        }
+      }
+    });
+
+    return () => {
+      if (currentObserver) {
+        currentObserver.disconnect();
+      }
+    };
+  // Added activeSection to dependencies to re-evaluate if it's externally changed (e.g. by click)
+  // although the observer should be the main driver on scroll.
+  }, [pathname, hasMounted, activeSection]); 
+
 
   return (
     <nav className="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-lg border-b border-slate-700">
@@ -211,7 +200,7 @@ export default function Navbar() {
           href={pathname === '/' ? '/#home' : '/'}
           onClick={() => {
             if (pathname === '/') {
-              setActiveSection('home');
+              setActiveSection('home'); 
             }
           }}
           className="flex items-center group"
@@ -221,7 +210,7 @@ export default function Navbar() {
         >
           <KRLogo className="text-white group-hover:text-purple-400 transition-colors duration-300" size={28} />
           <AnimatedText 
-            text="Karthik U Rao" 
+            text="Karthik Rao" 
             className="text-xl font-bold text-white group-hover:text-purple-400 transition-colors duration-300 ml-2" 
           />
         </NextLink>
@@ -230,17 +219,18 @@ export default function Navbar() {
           {navLinks.map((link) => {
             let isActive = false;
             if (pathname === '/') {
-                // Prioritize 'home' if activeSection is null (usually on initial load at top)
-                // or if explicitly set to 'home'.
-                isActive = (activeSection === null && link.sectionId === 'home' && hasMounted && (typeof window !== 'undefined' && window.scrollY < 50)) 
-                           || activeSection === link.sectionId;
+                if (activeSection === null && hasMounted && typeof window !== 'undefined' && window.scrollY < 50) {
+                    isActive = (link.sectionId === 'home');
+                } else {
+                    isActive = activeSection === link.sectionId;
+                }
             } else {
               isActive = (pathname === link.href || pathname.startsWith(link.href + '/'));
-              // Special case for resume page to ensure its tab highlights correctly
               if (link.sectionId === 'resume' && pathname === '/resume') isActive = true;
             }
 
             return (
+              // Pass the key to the actual repeating component instance
               <TiltableNavLink
                 key={link.name} 
                 link={link}
