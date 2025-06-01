@@ -1,4 +1,4 @@
-# Karthik U Rao - Personal Portfolio Website
+# Karthik Rao - Personal Portfolio Website
 
 Welcome to the repository for my personal portfolio website! This project showcases my skills as a Full-stack Developer with a passion for AI, featuring a dynamic and interactive user experience.
 
@@ -80,7 +80,7 @@ To get a local copy up and running, follow these simple steps.
     # or
     # pnpm install
     ```
-3.  **Set up Environment Variables (if any):**
+3.  **Set up Environment Variables :**
     * This project uses Formspree for the contact form. The endpoint URL is currently in `src/components/ContactSection.tsx`. For a more robust setup, you could move this to an environment variable (e.g., `.env.local`):
         ```env
         NEXT_PUBLIC_FORMSPREE_URL=[https://formspree.io/f/your_form_id](https://formspree.io/f/your_form_id)
@@ -106,18 +106,10 @@ To get a local copy up and running, follow these simple steps.
     * LinkedIn: [linkedin.com/in/karthik-u-rao](https://www.linkedin.com/in/karthik-u-rao) 
     * GitHub: `YourGitHubUsername` (Replace with your actual GitHub username)
 
-## 💡 Future Enhancements (Potential)
+## 💡 Future Enhancements
 
 * Command Palette (`Cmd+K`) for quick navigation.
 * User-toggleable Light/Dark mode.
 * Detailed individual project pages/case studies.
 * Blog section.
 
----
-
-This README provides a good overview of your project. Remember to:
-1.  **Add a great screenshot or GIF** near the top.
-2.  Replace `<your-repository-url>` and `YourGitHubUsername` with your actual details.
-3.  Update the Formspree endpoint if you move it to an environment variable.
-
-This should serve you well!
