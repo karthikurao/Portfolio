@@ -1,4 +1,4 @@
-// src/components/KRLogo.tsx
+// src/components/Logo.tsx
 'use client'
 import { motion } from 'framer-motion';
 

@@ -82,12 +82,12 @@ const TiltableNavLink: FC<TiltableNavLinkProps> = ({ link, isActive, pathname, o
         setIsLinkHoveredForTextAnim(true);
       }}
     >
-      <AnimatedNavLinkText text={link.name} isActive={isActive} isHovered={isLinkHoveredForTextAnim} />
+      <AnimatedNavLinkText text={link.name} isActive={isActive} isHovered={isLinkHoveredForTextAnim} /> 
       {isActive && (
         <motion.div
           className="absolute inset-0 bg-purple-600 rounded-full -z-10" 
           layoutId="activeNavLinkPill" 
-          transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+          transition={{ type: 'spring', stiffness: 380, damping: 28 }}
         />
       )}
     </MotionLink>
@@ -100,98 +100,119 @@ export default function Navbar() {
   const [hasMounted, setHasMounted] = useState(false);
   const { setVariant } = useCursor();
   const observerRef = useRef<IntersectionObserver | null>(null);
-  const observedElements = useRef<Map<string, HTMLElement>>(new Map());
+  const lastActiveSectionRef = useRef<string | null>(null);
 
   useEffect(() => {
     setHasMounted(true);
-    if (pathname === '/') {
-        if (typeof window !== 'undefined' && window.scrollY < window.innerHeight * 0.3) {
-            setActiveSection('home');
-        } else {
-            let currentVisibleSection: string | null = 'home'; 
-            let maxVisibleRatio = 0;
-            navLinks.forEach(link => {
-                if (link.sectionId) {
-                    const el = document.getElementById(link.sectionId);
-                    if (el) {
-                        const rect = el.getBoundingClientRect();
-                        const vh = window.innerHeight;
-                        if (rect.top < vh && rect.bottom > 0) { 
-                           const visibleHeight = Math.max(0, Math.min(rect.bottom, vh) - Math.max(rect.top, 0));
-                           const ratio = visibleHeight / rect.height;
-                           if (ratio > maxVisibleRatio) {
-                               maxVisibleRatio = ratio;
-                               currentVisibleSection = link.sectionId;
-                           }
-                        }
-                    }
-                }
-            });
-            setActiveSection(currentVisibleSection);
-        }
-    }
-  }, [pathname]); 
+  }, []);
 
+  // Effect to set initial active section based on path or scroll on mount
+  useEffect(() => {
+    if (!hasMounted) return;
+
+    let initialId: string | null = null;
+    if (pathname === '/') {
+      initialId = 'home'; 
+      if (typeof window !== 'undefined' && window.scrollY > 50) {
+        let mostVisibleSectionId: string | null = null;
+        let minTopAmongVisible = Infinity;
+
+        navLinks.forEach(link => {
+          if (link.sectionId) {
+            const element = document.getElementById(link.sectionId);
+            if (element) {
+              const rect = element.getBoundingClientRect();
+              // Check if element is at least partially in viewport
+              if (rect.top < window.innerHeight && rect.bottom > 0) {
+                if (rect.top < minTopAmongVisible) {
+                  minTopAmongVisible = rect.top;
+                  mostVisibleSectionId = link.sectionId;
+                }
+              }
+            }
+          }
+        });
+        if (mostVisibleSectionId) initialId = mostVisibleSectionId;
+      }
+    } else {
+      for (const link of navLinks) {
+        if (pathname === link.href || pathname.startsWith(link.href + '/')) {
+          initialId = link.sectionId;
+          break;
+        }
+      }
+    }
+    
+    if (initialId !== lastActiveSectionRef.current) {
+        setActiveSection(initialId);
+        lastActiveSectionRef.current = initialId;
+    }
+
+  }, [pathname, hasMounted]);
+
+
+  // IntersectionObserver for homepage scroll spy
   useEffect(() => {
     if (!hasMounted || pathname !== '/') {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
-      if (pathname !== '/') setActiveSection(null); 
+      if (observerRef.current) observerRef.current.disconnect();
       return;
     }
 
     const observerCallback = (entries: IntersectionObserverEntry[]) => {
-      let newActiveCandidate: string | null = null;
-      let maxRatio = 0;
+      let newActiveCandidateId: string | null = null;
 
-      entries.forEach(entry => {
-        if (entry.isIntersecting && entry.intersectionRatio > maxRatio) {
-          maxRatio = entry.intersectionRatio;
-          newActiveCandidate = entry.target.id;
+      const intersectingEntries = entries.filter(entry => entry.isIntersecting);
+
+      if (intersectingEntries.length > 0) {
+        // Sort by vertical position on screen (highest one first)
+        intersectingEntries.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        // The highest one on the screen that is intersecting (even partially) within the rootMargin
+        // is considered our prime candidate.
+        newActiveCandidateId = intersectingEntries[0].target.id;
+      } else {
+        // No section is currently intersecting the defined "active zone".
+        // Fallback to 'home' only if scrolled to the very top.
+        if (typeof window !== 'undefined' && window.scrollY < 50) { // 50px threshold
+          newActiveCandidateId = 'home';
+        } else {
+          // If not at the top and nothing is intersecting, allow pill to disappear
+          newActiveCandidateId = null; 
         }
-      });
-
-      let finalActiveSection = null;
-      if (newActiveCandidate && maxRatio > 0.05) { // Require at least 5% visibility via observer
-        finalActiveSection = newActiveCandidate;
-      } else if (typeof window !== 'undefined' && window.scrollY < window.innerHeight * 0.3) {
-        finalActiveSection = 'home';
       }
       
-      // Only update if the active section has actually changed
-      if (finalActiveSection !== activeSection) {
-          setActiveSection(finalActiveSection);
+      if (newActiveCandidateId !== lastActiveSectionRef.current) {
+        setActiveSection(newActiveCandidateId);
+        lastActiveSectionRef.current = newActiveCandidateId;
       }
     };
-
+    
+    if (observerRef.current) observerRef.current.disconnect();
+    
     observerRef.current = new IntersectionObserver(observerCallback, {
-      rootMargin: '-25% 0px -25% 0px', 
-      threshold: Array.from(Array(11).keys()).map(i => i / 10), 
+      // This rootMargin means the "active zone" for a section to be considered is
+      // when it's within the top 60% to bottom 60% of the viewport.
+      // Essentially, a section is active if it's roughly in the middle.
+      // Adjust -X% (top) and -Y% (bottom) to define your "trigger zone".
+      // e.g., "-40% 0px -40%" makes the middle 20% the active zone.
+      // Let's try a zone that's a bit more generous: top 30% to bottom 30% (middle 40%)
+      rootMargin: "-30% 0px -30% 0px", 
+      threshold: 0.01, // Trigger if even a tiny part (1%) of the element enters/leaves the rootMargin zone.
     });
 
     const currentObserver = observerRef.current;
-    observedElements.current.clear(); 
-
     navLinks.forEach(link => {
-      if (link.sectionId) { 
+      if (link.sectionId) {
         const element = document.getElementById(link.sectionId);
         if (element) {
-          observedElements.current.set(link.sectionId, element);
           currentObserver.observe(element);
         }
       }
     });
 
     return () => {
-      if (currentObserver) {
-        currentObserver.disconnect();
-      }
+      if (currentObserver) currentObserver.disconnect();
     };
-  // Added activeSection to dependencies to re-evaluate if it's externally changed (e.g. by click)
-  // although the observer should be the main driver on scroll.
-  }, [pathname, hasMounted, activeSection]); 
-
+  }, [pathname, hasMounted]);
 
   return (
     <nav className="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-lg border-b border-slate-700">
@@ -201,6 +222,7 @@ export default function Navbar() {
           onClick={() => {
             if (pathname === '/') {
               setActiveSection('home'); 
+              lastActiveSectionRef.current = 'home';
             }
           }}
           className="flex items-center group"
@@ -210,27 +232,15 @@ export default function Navbar() {
         >
           <KRLogo className="text-white group-hover:text-purple-400 transition-colors duration-300" size={28} />
           <AnimatedText 
-            text="Karthik Rao" 
+            text="Karthik U Rao" 
             className="text-xl font-bold text-white group-hover:text-purple-400 transition-colors duration-300 ml-2" 
           />
         </NextLink>
 
         <div className="hidden md:flex items-center gap-1">
           {navLinks.map((link) => {
-            let isActive = false;
-            if (pathname === '/') {
-                if (activeSection === null && hasMounted && typeof window !== 'undefined' && window.scrollY < 50) {
-                    isActive = (link.sectionId === 'home');
-                } else {
-                    isActive = activeSection === link.sectionId;
-                }
-            } else {
-              isActive = (pathname === link.href || pathname.startsWith(link.href + '/'));
-              if (link.sectionId === 'resume' && pathname === '/resume') isActive = true;
-            }
-
+            const isActive = activeSection === link.sectionId;
             return (
-              // Pass the key to the actual repeating component instance
               <TiltableNavLink
                 key={link.name} 
                 link={link}
@@ -239,6 +249,7 @@ export default function Navbar() {
                 onClick={() => {
                   if (pathname === '/') {
                     setActiveSection(link.sectionId);
+                    lastActiveSectionRef.current = link.sectionId;
                   }
                 }}
               />

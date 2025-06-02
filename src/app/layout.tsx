@@ -8,6 +8,7 @@ import { Toaster } from "@/components/ui/sonner"
 import Footer from '@/components/Footer'
 import CustomCursor from '@/components/CustomCursor';
 import { CursorProvider } from '@/context/CursorContext'; // <-- IMPORT CURSOR PROVIDER
+import { Analytics } from "@vercel/analytics/next"
 
 const inter = Inter({ subsets: ['latin'] })
 
