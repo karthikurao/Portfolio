@@ -41,8 +41,8 @@ const AnimatedNavLinkText: React.FC<AnimatedNavLinkTextProps> = ({ text, isActiv
           animate={isHovered && !isActive ? "hover" : "initial"} 
           transition={{ // This transition applies to changes triggered by `animate`
             type: "spring", 
-            stiffness: 400, // A bit stiffer for a quicker response
-            damping: 15,    // Controls bounciness
+            stiffness: 150, // Reduced stiffness for smoother animation
+            damping: 30,    // Increased damping to eliminate bounce
             delay: index * 0.025, // Slightly faster stagger
           }} 
           className="inline-block" 

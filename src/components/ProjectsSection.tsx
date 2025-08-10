@@ -45,7 +45,7 @@ const TiltableCard: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
-  const springConfig = { stiffness: 150, damping: 20, mass: 1 };
+  const springConfig = { stiffness: 150, damping: 30, mass: 1 };
   const springX = useSpring(mouseX, springConfig);
   const springY = useSpring(mouseY, springConfig);
 

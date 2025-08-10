@@ -32,9 +32,12 @@ export default function ContactSection() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true)
     try {
-      const response = await fetch('https://formspree.io/f/mpwdgonl', { // Replace with your Formspree URL
+      const response = await fetch('https://formspree.io/f/mpwdgonl', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify(values),
       })
 
@@ -44,12 +47,13 @@ export default function ContactSection() {
         });
         form.reset()
       } else {
-        throw new Error('Failed to send message')
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to send message')
       }
     } catch (error) {
       console.error("Failed to send message:", error);
       toast.error("Uh oh! Something went wrong.", {
-        description: "There was a problem sending your message. Please try again.",
+        description: error instanceof Error ? error.message : "There was a problem sending your message. Please try again.",
       })
     } finally {
         setIsSubmitting(false)
@@ -112,7 +116,7 @@ export default function ContactSection() {
                 aria-label="LinkedIn Profile"
             ><Linkedin size={32} /></motion.a>
             <motion.a 
-                href="https://github.com/your-username" target="_blank" rel="noopener noreferrer" 
+                href="https://github.com/karthikurao" target="_blank" rel="noopener noreferrer" 
                 className="text-slate-400 hover:text-purple-400 transition-colors"
                 whileHover={{ scale: 1.2 }} whileTap={{ scale: 0.9 }}
                 onMouseEnter={() => setVariant('link-hover')} // <-- ADDED
@@ -120,7 +124,7 @@ export default function ContactSection() {
                 aria-label="GitHub Profile"
             ><Github size={32} /></motion.a>
             <motion.a 
-                href="https://instagram.com/your-instagram-username" target="_blank" rel="noopener noreferrer" 
+                href="https://instagram.com/karthikurao_" target="_blank" rel="noopener noreferrer" 
                 className="text-slate-400 hover:text-purple-400 transition-colors"
                 whileHover={{ scale: 1.2 }} whileTap={{ scale: 0.9 }}
                 onMouseEnter={() => setVariant('link-hover')} // <-- ADDED
@@ -128,7 +132,7 @@ export default function ContactSection() {
                 aria-label="Instagram Profile"
             ><Instagram size={32} /></motion.a>
             <motion.a 
-                href="https://x.com/your-twitter-username" target="_blank" rel="noopener noreferrer" 
+                href="https://x.com/karthikurao_" target="_blank" rel="noopener noreferrer" 
                 className="text-slate-400 hover:text-purple-400 transition-colors"
                 whileHover={{ scale: 1.2 }} whileTap={{ scale: 0.9 }}
                 onMouseEnter={() => setVariant('link-hover')} // <-- ADDED

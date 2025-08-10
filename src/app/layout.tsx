@@ -39,6 +39,7 @@ export default function RootLayout({
             <Footer />
           </div>
         </CursorProvider>
+        <Analytics />
       </body>
     </html>
   )

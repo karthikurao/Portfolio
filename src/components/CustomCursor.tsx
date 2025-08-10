@@ -1,31 +1,37 @@
 // src/components/CustomCursor.tsx
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { motion, useMotionValue, useSpring, Variants } from 'framer-motion';
-import { useCursor } from '@/context/CursorContext'; // Import the hook
+import { useCursor } from '@/context/CursorContext';
 
 const CustomCursor = () => {
-  const { variant } = useCursor(); // Get the current cursor variant from context
+  const { variant } = useCursor();
 
   const cursorX = useMotionValue(0);
   const cursorY = useMotionValue(0);
 
-  // Spring settings for smooth cursor follow
-  const springConfig = { damping: 30, stiffness: 700, mass: 0.2 };
+  // Optimized spring settings for smoother movement
+  const springConfig = { damping: 40, stiffness: 200, mass: 0.1 };
   const springX = useSpring(cursorX, springConfig);
   const springY = useSpring(cursorY, springConfig);
 
-  useEffect(() => {
-    const moveCursor = (e: MouseEvent) => {
-      cursorX.set(e.clientX);
-      cursorY.set(e.clientY);
-    };
-    window.addEventListener('mousemove', moveCursor);
-    return () => {
-      window.removeEventListener('mousemove', moveCursor);
-    };
+  // Throttle mouse move for better performance
+  const throttledMoveCursor = useCallback((e: MouseEvent) => {
+    cursorX.set(e.clientX);
+    cursorY.set(e.clientY);
   }, [cursorX, cursorY]);
+
+  useEffect(() => {
+    // Check if device supports hover (not on touch devices)
+    const hasHover = window.matchMedia('(hover: hover)').matches;
+    if (!hasHover) return;
+
+    window.addEventListener('mousemove', throttledMoveCursor);
+    return () => {
+      window.removeEventListener('mousemove', throttledMoveCursor);
+    };
+  }, [throttledMoveCursor]);
 
   const innerDotSize = 10; // Size of the inner dot
   const outerRingSize = 36; // Size of the outer ring when hovered
@@ -64,21 +70,18 @@ const CustomCursor = () => {
   // Main follower div, positions children correctly
   return (
     <motion.div
-      className="fixed pointer-events-none z-[9999] -translate-x-1/2 -translate-y-1/2" // Centers the elements on cursor
+      className="fixed pointer-events-none z-[9999] -translate-x-1/2 -translate-y-1/2 hidden md:block" // Hide on mobile devices
       style={{
         left: springX,
         top: springY,
       }}
-      // Animate based on variant for potential main cursor container changes (optional)
-      // variants={mainCursorContainerVariants} 
-      // animate={variant}
       transition={{ type: 'spring', ...springConfig }}
     >
       {/* Outer Ring */}
       <motion.div
         variants={outerRingVariants}
         animate={variant} // Animates based on the variant from context
-        transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+        transition={{ type: 'spring', stiffness: 250, damping: 35 }}
         className="absolute rounded-full" // No explicit border class, borderWidth from variants
         style={{
           width: outerRingSize,
@@ -91,7 +94,7 @@ const CustomCursor = () => {
       <motion.div
         variants={innerDotVariants}
         animate={variant} // Animates based on the variant from context
-        transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+        transition={{ type: 'spring', stiffness: 200, damping: 35 }}
         className="absolute rounded-full" // No explicit bg class, backgroundColor from variants
         style={{
           width: innerDotSize,
